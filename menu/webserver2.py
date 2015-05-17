@@ -13,6 +13,17 @@ session = DBSession()
 class webServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
+            if self.path.endswith("/restaurants/new"):
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                output = ""
+                output += "<html><body>"
+                output += '''<form method='POST' enctype='multipart/form-data' action='/restaurants/new'><h2>What Restaurant would you like to create?</h2><input name="newRestaurant" type="text" ><input type="submit" value="Submit"> </form>'''
+                output += "<h2></h2>"
+                output += "</body></html>"
+                self.wfile.write(output)
+                
             if self.path.endswith("/restaurants"):
                 restaurants = session.query(Restaurant).all()
                 self.send_response(200)
@@ -23,6 +34,10 @@ class webServerHandler(BaseHTTPRequestHandler):
                 output += "<html><body>"
                 for restaurant in restaurants:
                     output += restaurant.name
+                    output += "</br>"
+                    output += "<a href='#'>Edit</a>"
+                    output += "</br>"
+                    output += "<a href='#'>Delete</a>"
                     output += "</br>"
                 output += "</html></body>"
                 self.wfile.write(output)
@@ -37,9 +52,6 @@ class webServerHandler(BaseHTTPRequestHandler):
                 output += "<html><body>"
                 output += "<h1>Hello!</h1>"
                 output += '''<form method='POST' enctype='multipart/form-data' action='/hello'><h2>What would you like me to say?</h2><input name="message" type="text" ><input type="submit" value="Submit"> </form>'''
-                while n <= len(allRestaurants):
-                    output += "<h2> %s </h2>" % allRestaurants[n].name
-                    n += 1
                 output += "</body></html>"
                 self.wfile.write(output)
                 print output
@@ -70,7 +82,10 @@ class webServerHandler(BaseHTTPRequestHandler):
             if ctype == 'multipart/form-data':
                 fields = cgi.parse_multipart(self.rfile, pdict)
                 messagecontent = fields.get('message')
-                
+                newRestaurant = fields.get('newRestaurant')
+            myNewRestaurant = Restaurant(name = str(newRestaurant[0]))
+            session.add(myNewRestaurant)
+            session.commit()
             output = ""
             output += "<html><body>"
             output += " <h2> Okay, how about this: </h2>"

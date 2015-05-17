@@ -90,13 +90,15 @@ class webServerHandler(BaseHTTPRequestHandler):
                     self.send_header('Location', '/restaurants')
                     self.end_headers()
                     
-            if self.pathendswith("/hello"):    
+            elif self.path.endswith("/hello"):
+                print "WE GOT HERE"
+                self.send_response(301)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
                 ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
                 if ctype == 'multipart/form-data':
                     fields = cgi.parse_multipart(self.rfile, pdict)
                     messagecontent = fields.get('message')
-                    newRestaurant = fields.get('newRestaurant')
-
                 output = ""
                 output += "<html><body>"
                 output += " <h2> Okay, how about this: </h2>"

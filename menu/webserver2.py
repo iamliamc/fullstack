@@ -1,5 +1,6 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-import cgi
+import cgi, re
+
 ## import CRUD operations
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -13,6 +14,19 @@ session = DBSession()
 class webServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
+            if self.path.endswith("/edit"):
+                dbID = re.sub("\D", "", str(self.path))
+                r_name = session.query(Restaurant).filter_by(id = dbID).one()
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                output = ""
+                output += "<html></body>"
+                output += '''<form method='POST' enctype='multipart/form-data' action='/edit'><h2> %s </h2><input name="rename" type="text" ><input type="submit" value="Rename"> </form>''' % r_name.name
+                output += "</html></body>"
+                self.wfile.write(output)
+                
+                
             if self.path.endswith("/restaurants/new"):
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')
@@ -34,11 +48,13 @@ class webServerHandler(BaseHTTPRequestHandler):
                 output += "<a href = '/restaurants/new'> Make new Restaurant Here </a></br></br>"
                 output += "<html><body>"
                 for restaurant in restaurants:
+                    rID = restaurant.id
                     output += restaurant.name
                     output += "</br>"
-                    output += "<a href='#'>Edit</a>"
+                    output += "<a href='/restaurants/%s/edit'>Edit</a>" % rID
                     output += "</br>"
                     output += "<a href='#'>Delete</a>"
+                    output += "</br>"
                     output += "</br>"
                 output += "</html></body>"
                 self.wfile.write(output)
@@ -91,7 +107,6 @@ class webServerHandler(BaseHTTPRequestHandler):
                     self.end_headers()
                     
             elif self.path.endswith("/hello"):
-                print "WE GOT HERE"
                 self.send_response(301)
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
@@ -107,6 +122,23 @@ class webServerHandler(BaseHTTPRequestHandler):
                 output += "</body></html>"
                 self.wfile.write(output)
                 print output
+                
+            elif self.path.endswith("/edit"):
+                dbID = re.sub("\D", "", str(self.path))
+                r_name = session.query(Restaurant).filter_by(id = dbID).one()
+                ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+                if ctype == 'multipart/form-data':
+                    fields = cgi.parse_multipart(self.rfile, pdict)
+                    messagecontent = fields.get('rename')
+                    print messagecontent
+                r_name.name = messagecontent[0]
+                session.add(r_name)
+                session.commit()
+                self.send_response(301)
+                self.send_header('Content-type', 'text/html')
+                self.send_header('Location', '/restaurants')
+                self.end_headers()
+                
         except:
             pass
 

@@ -17,14 +17,17 @@ class webServerHandler(BaseHTTPRequestHandler):
             if self.path.endswith("/edit"):
                 dbID = re.sub("\D", "", str(self.path))
                 r_name = session.query(Restaurant).filter_by(id = dbID).one()
-                self.send_response(200)
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                output = ""
-                output += "<html></body>"
-                output += '''<form method='POST' enctype='multipart/form-data' action='/edit'><h2> %s </h2><input name="rename" type="text" ><input type="submit" value="Rename"> </form>''' % r_name.name
-                output += "</html></body>"
-                self.wfile.write(output)
+                if r_name != []:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    output = ""
+                    output += "<html></body>"
+                    output += "<h2> %s </h2>" % r_name.name
+                    output += '''<form method='POST' enctype='multipart/form-data' action='/restaurants/%s/edit'>''' % dbID
+                    output += '''<input name="rename" type="text" ><input type="submit" value="Rename" placeholder = '%s'> </form>''' % r_name.name
+                    output += "</html></body>"
+                    self.wfile.write(output)
                 
                 
             if self.path.endswith("/restaurants/new"):

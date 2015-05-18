@@ -25,9 +25,25 @@ class webServerHandler(BaseHTTPRequestHandler):
                     output += "<html></body>"
                     output += "<h2> %s </h2>" % r_name.name
                     output += '''<form method='POST' enctype='multipart/form-data' action='/restaurants/%s/edit'>''' % dbID
-                    output += '''<input name="rename" type="text" ><input type="submit" value="Rename" placeholder = '%s'> </form>''' % r_name.name
+                    output += '''<input name="rename" type="text" ><input type="submit" value="rename" placeholder = "%s"> </form>''' % r_name.name
                     output += "</html></body>"
                     self.wfile.write(output)
+            
+            if self.path.endswith("/delete"):
+                dbID = re.sub("\D", "", str(self.path))
+                r_delete = session.query(Restaurant).filter_by(id = dbID).one()
+                print r_delete.name
+                if r_delete != []:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    output = ""
+                    output += "<html><body>"
+                    output += "<h2>Do you want to delete %s</h2>" % r_delete.name
+                    output += "<h2> %s </h2>" % r_delete.name
+                    output += '''<form method='POST' enctype='multipart/form-data' action='/restaurant/%s/delete'><input type="submit" value="delete"></form>''' %dbID
+                    output += "</html></body>"
+                    self.wfile.write(output)        
                 
                 
             if self.path.endswith("/restaurants/new"):
@@ -56,7 +72,7 @@ class webServerHandler(BaseHTTPRequestHandler):
                     output += "</br>"
                     output += "<a href='/restaurants/%s/edit'>Edit</a>" % rID
                     output += "</br>"
-                    output += "<a href='#'>Delete</a>"
+                    output += "<a href='restaurants/%s/delete'>Delete</a>" % rID
                     output += "</br>"
                     output += "</br>"
                 output += "</html></body>"
@@ -141,7 +157,18 @@ class webServerHandler(BaseHTTPRequestHandler):
                 self.send_header('Content-type', 'text/html')
                 self.send_header('Location', '/restaurants')
                 self.end_headers()
-                
+            
+            elif self.path.endswith("/delete"):
+                dbID = re.sub("\D", "", str(self.path))
+                r_delete = session.query(Restaurant).filter_by(id = dbID).one()
+                ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+                if r_delete != []:
+                    session.delete(r_delete)
+                    session.commit()
+                    self.send_response(301)
+                    self.send_header('Content-type', 'text/html')
+                    self.send_header('Location', '/restaurants')
+                    self.end_headers()
         except:
             pass
 

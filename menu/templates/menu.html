@@ -1,0 +1,21 @@
+<html>
+    <body>
+        <h1>{{ restaurant.name }}</h1>
+        
+        <!-- Logical code in Flask framework {} + % % like this for loop -->
+        {% for i in items %}
+        
+        <!-- Printed code like this value two curl braces -->
+        {{i.name}}
+        </br>
+        
+        {{i.description}}
+        </br>
+        
+        {{i.price}}
+        </br>
+        
+        {% endfor %}
+        
+    </body>
+</html>
